@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Jogo da Memória</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<h4 id="vez"></h4>
+			<h4 id="test2"></h4>
+			<div class="col-md-12" class="timer">
+				<h2 id="yuyuyu" align="center" ></h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-2 jogadores" id="jogador1" align="center">
+				Jogador1
+			</div>
+			<div class="col-md-8 " id="conjunto" align="center">
+				<div id="modos" style="padding: 5px;"  >
+					<h2 style="color: #F8F8FF">Jogo da Memória</h2>
+					<br>
+					<h3 style="color: #F8F8FF">Escolha um dos modos: </h3>
+					<br><br>
+					<button class="btn btn-success" data-toggle="tooltip" data-placement="top" title="Araay waw" onclick="start(2,10);">1 Jogador (Normal)</button>
+					<br><br>
+					<button class="btn btn-danger" onclick="start(1,18);">1 Jogador(Dificil)</button>
+					<br><br>
+					<button class="btn btn-primary" onclick="startDoisJogadores();">2 Jogadores</button>
+				</div>
+			</div>
+			<div class="col-md-2 jogadores" id="jogador2" align="center">
+				Jogador2
+			</div>				
+		</div>
+
+	</div>
+	<script type="text/javascript" src="js/jquery-3.3.1.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script type="text/javascript">
+	var cartas = new Array();/* = ["c1","c2","c3","c4","c5","c6","c7"...]; */ //conjunto total das cartas
+	for(var p = 0;p < 45;p++)
+	{
+		cartas.push("c"+p);
+	}
+	var cartasClone1 = new Array(); // Array que irá pegar uma certa quantidade do conjunto
+	var cartasClone2 = new Array(); // Nesse array ele será um 'clone' das cartas pegas
+	var cartasJogadas = new Array();// Fusão de ambas que irá aparecer no jogo
+	var i;	//Incrementador para o for
+	var random;
+	var carta1;
+	var carta2;
+	var idCarta1; //Identificação da primeira carta virada para comparar
+	var idCarta2; //Identificação da segunda carta virada
+	var jogador1 = true;
+	var jogador2 = false;
+	var vez = 1;
+		
+	// Timer do modo solo
+	function tempoLimite(tempo)
+	{
+		var min = tempo;
+		var seg = 0;
+		document.getElementById("yuyuyu").innerHTML = min +":" + seg + 0;
+		var myTimer = setInterval(timer,1000);
+		function timer()
+		{
+			if(seg == 0)
+			{
+				min--;
+				seg = 59;
+			}
+			if(min == 0 && seg == 10)
+			{
+				$(".timer").css({"color":"red"});
+			}
+			seg--;
+			document.getElementById("yuyuyu").innerHTML =  min +":" + seg;
+			if(min == 0 && seg == 0)
+			{
+				alert("Acabou o Tempo Você Perdeu");
+				clearInterval(myTimer);
+				retirarClick();
+			}
+
+		}
+	}
+
+	/* Aqui será atribuida as cartas do jogo*/
+	function prepararCartas(qt)
+	{	
+		$("#modos").remove();
+
+		var str = "";
+		/**
+		* O Math.floor ele arredonda para baixo ou seja 2,5 vai se tornar 2
+		* O Math.round ele arredonda para o mais perto podendo ser tanto pra cima como pra baixo
+		* Aqui o Math.round podia estar arredondando 7,5 para 8 assim dando pau e não encontrando a imagem
+		* da carta(epoca que testei com 7 cartas no inicio).
+		*/
+
+	    /** Random sera uma posição aleatória do array que contem todas as cartas
+		* Através do push ele irá acrescentar uma carta aleatória do conjunto total no cartasClone1(conjunto original)
+		* O .splice serve para adicionar ou remover um elemento do array
+		* Para evitar que as cartas sejam clonadas mais de duas vezes,vamos retirar o array pego do conjunto
+		* original (cartas).
+		*/ 
+		for(i = 0;i < qt; i++)
+		{
+			random = Math.floor(Math.random() * cartas.length);
+			cartasClone1.push( cartas[random] );
+			cartas.splice(random,1);
+		}
+			//Clonando as cartas aleatórias
+			//O .slice irá extrair(copiar) do array () começando a partir do index 0
+			cartasClone2 = cartasClone1.slice( 0 );
+
+			//Juntando ambos os arrays fazendo o jogo da memória
+			cartasJogadas = cartasClone2.concat(cartasClone1);
+
+		//Embaralhando as cartas (as posições do array das cartas)
+		cartasJogadas.sort(function(a,b){return 0.5 - Math.random()});
+	}
+
+	/* Inicio do jogo modo solo
+	 * Nesses parâmetros serão colocados o tempo limite e a quantidade de cartas
+	 * que definirão a dificuldade(serão definidos no HTML)
+	*/
+	function start(tempo, qt)
+	{	
+		prepararCartas(qt);
+		tempoLimite(tempo);
+		var str = "";
+
+		//Caso as cartas sejam demais para a tela,diminuir a coluna para caber elas
+		if(cartasJogadas.length == 36)
+		{
+			document.getElementById("conjunto").classList.remove("col-md-8");
+			document.getElementById("conjunto").classList.add("col-md-12");
+		}
+		/*document.getElementById("conjunto").classList.remove("col-md-10");
+		document.getElementById("conjunto").classList.remove("col-sm-12");
+		document.getElementById("conjunto").classList.add("col-md-8");*/
+
+		//Exibindo as cartas
+		for(var i2 = 0;i2 < cartasJogadas.length;i2++ )
+		{
+
+			str += "<div align=\"center\"class=\"cartas\" id=\"divCard"+ i2 +"\" onclick=\"escolherCarta("+i2+");\"><img src=img/GuessWho.jpg class=\"card\" id=\"imgCard"+ i2 +"\"><\/div>";
+		}
+		document.getElementById("conjunto").innerHTML = str;
+	}
+
+	// Função para retirar o click de todos os elementos para que o jogador não consiga selecionar 3 cartas rapidamente
+	function retirarClick()
+	{
+		for (i=0; i < cartasJogadas.length;i++)
+		{
+			//pointer-events é uma função do css em que ele desabilita as ações do ponteiro no elemento
+			$('#divCard'+i).css({'pointer-events':'none'});
+		}
+	}
+
+	//Essa função será devolverá o click as cartas como era antes,ambas funções serão utilizadas em outros metodos
+	function devolverClick()
+	{
+		for (i = 0;i < cartasJogadas.length;i++)
+		{
+			//o auto restaura o click
+			$('#divCard'+i).css({'pointer-events':'auto'});
+		}
+	}
+
+	// Inicio do jogo de dois players
+	function startDoisJogadores()
+	{
+		$(".jogadores").css({"display":"inline-block"});
+		document.getElementById("vez").innerHTML = "Agora é a vez do Jogador "+ vez;
+		prepararCartas(12);
+		//para saber as posições das cartas: document.getElementById("test2").innerHTML = cartasJogadas;
+		var str = "";
+		$("#conjunto").css({"width":"1px"});
+		//$("#conjunto").css({"margin-left":"250px"});
+		//Exibindo as cartas
+		for(var i2 = 0;i2 < cartasJogadas.length;i2++ )
+		{
+
+			str += "<div align=\"center\"class=\"cartas\" id=\"divCard"+ i2 +"\" onclick=\"escolherCarta2("+i2+");\"><img src=img/GuessWho.jpg class=\"card\" id=\"imgCard"+ i2 +"\"><\/div>";
+		}
+		document.getElementById("conjunto").innerHTML = str;
+		/*str = "";
+		str = "<div align=\"left\" id=\"jogador1\">tre</div>";
+		$("body").append(str);
+		str = "";
+		str = "<div align=\"right\" id=\"jogador2\">tre</div>";
+		$("body").append(str);*/
+	}	
+
+
+	function escolherCarta(pos)
+	{		
+			//Caso a pessoa não tenha virado a primeira carta ainda
+			if(carta1 == null)
+			{
+				idCarta1 = pos;
+				carta1 = cartasJogadas[pos];
+
+				//classList.add() adiciona uma class ao elemento
+				//Essa classe flip ela vira a cara
+				document.getElementById("imgCard"+pos).classList.add("flip");
+
+				//Dando um tempo para ao virar a carta a imagem mudar
+				setTimeout(() => {
+					document.getElementById("imgCard"+pos).src = "img/" + carta1 + ".png"; 
+  				}, 260);
+
+			    //Impedindo que a função seja acionada novamente na carta escolhida
+			    document.getElementById("divCard"+pos).removeAttribute("onclick");
+			    return;
+			}
+			
+				idCarta2 = pos;
+				carta2 = cartasJogadas[pos];
+				document.getElementById("imgCard"+pos).classList.add("flip");
+				setTimeout(() => {
+					document.getElementById("imgCard"+pos).src = "img/" + carta2 + ".png"; 
+  				}, 300);
+				document.getElementById("divCard"+pos).removeAttribute("onclick");
+				retirarClick();
+
+			//As cartas ficarão um tempo a mostra para ver se foi um acerto ou um erro
+			//Após esse tempo será executada uma função de verificação
+			setTimeout(verificaAcerto,1100);
+			function verificaAcerto()
+			{
+				//Se as duas cartas estiverem viradas...
+				if(carta1 != null && carta2 != null)
+				{
+					//Caso as cartas sejam iguais
+					if(carta1 == carta2)
+					{
+						if(cartasJogadas.length == 40)
+						{
+							seg+10;
+						}
+						//O par de cartas certas não terão mais função nenhuma.
+						//Removendo o atributo onclick da 1ª carta com Javascript puro
+						document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
+						//Removendo o atributo onclick da 2ª carta com Jquery
+						$("#divCard"+idCarta2).removeAttr("onclick");
+					 	//alert("É igual");
+						carta1 = null;
+						carta2 = null;
+						
+
+					}
+					else
+					{	
+						//alert("Cartas erradas");
+						carta1 = null;
+						carta2 = null;
+						//"Virando" as cartas novamente no caso de estarem erradas
+						document.getElementById("imgCard"+idCarta1).classList.remove("flip");
+						$("#imgCard"+idCarta1).attr('src','img/GuessWho.jpg');
+						document.getElementById("imgCard"+idCarta2).classList.remove("flip");
+						$("#imgCard"+idCarta2).attr('src','img/GuessWho.jpg');
+
+						//Devolvendo o atributo onclick para a Carta 1 do jeito que estava,com Javascript puro
+						document.getElementById("divCard"+idCarta1).setAttribute("onclick",
+						"escolherCarta("+ idCarta1 +");");
+
+						//Devolvendo o atributo onclick para a Carta 2 do jeito que estava,com Jquery
+						$("#divCard"+idCarta2).attr("onclick","escolherCarta("+ idCarta2 +");");
+					}
+					devolverClick();
+				}
+			}	
+	}
+
+
+	//2 Jogadores-----------------------------------------------------------------------------
+	function escolherCarta2(pos)
+	{
+
+			if(carta1 == null)
+			{
+				idCarta1 = pos;
+				carta1 = cartasJogadas[pos];
+			    document.getElementById("imgCard"+pos).src = "img/" + carta1 + ".png";
+			    //Impedindo que a função seja acionada novamente na carta escolhida
+			    document.getElementById("divCard"+pos).removeAttribute("onclick");
+			    return;
+			}
+				idCarta2 = pos;
+				carta2 = cartasJogadas[pos];
+				document.getElementById("imgCard"+pos).src = "img/" + carta2 + ".png";
+				document.getElementById("divCard"+pos).removeAttribute("onclick");
+				retirarClick();
+
+			//As cartas ficarão um tempo a mostra para ver se foi um acerto ou um erro
+			//Após esse tempo será executada uma função de verificação
+			setTimeout(verificaAcerto2,800);
+			function verificaAcerto2()
+			{
+				//Se as duas cartas estiverem viradas...
+				if(carta1 != null && carta2 != null)
+				{
+					//Caso as cartas sejam iguais
+					if(carta1 == carta2)
+					{
+						
+							document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
+							//document.getElementById("imgCard"+idCarta1).src = "img/vazio.png";
+							//Removendo o atributo onclick da 2ª carta com Jquery
+							$("#divCard"+idCarta2).removeAttr("onclick");
+							//document.getElementById("imgCard"+idCarta2).src = "img/vazio.png";
+							$("#divCard"+idCarta1).css({"opacity":"0"});
+							$("#divCard"+idCarta2).css({"opacity":"0"});
+
+						if(jogador1 == true && jogador2 == false)
+						{	
+						 		$("#jogador1").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
+						 		$("#jogador1").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");	
+						}
+						else if (jogador2 == true && jogador1 == false)
+						{
+								$("#jogador2").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
+						 		$("#jogador2").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");
+						}
+						carta1 = null;
+						carta2 = null;
+					}
+					else
+					{	
+						if(/*jogador1 == true && jogador2 == false*/vez == 1)
+						{
+							jogador1 = false;
+							jogador2 = true;
+							vez = 2;
+							document.getElementById("vez").innerHTML = "Agora é a vez do Jogador "+ vez;
+							$("#jogador1").css({"background-color":"white"});
+							$("#jogador2").css({"background-color":"rgba(0,250,154,50%)"});
+
+						}
+						else if(/*jogador2 == true && jogador1 == false*/vez == 2)
+						{
+							jogador1 = true;
+							jogador2 = false;
+							vez = 1;
+							$("#jogador1").css({"background-color":"rgba(0,250,154,50%)"});
+							$("#jogador2").css({"background-color":"white"});
+							document.getElementById("vez").innerHTML = "Agora é a vez do Jogador "+ vez;
+						}
+						carta1 = null;
+						carta2 = null;
+						//"Virando" as cartas novamente no caso de estarem erradas
+						$("#imgCard"+idCarta1).attr('src','img/GuessWho.jpg');
+						$("#imgCard"+idCarta2).attr('src','img/GuessWho.jpg');
+
+						//Devolvendo o atributo onclick para a Carta 1 do jeito que estava,com Javascript puro
+						document.getElementById("divCard"+idCarta1).setAttribute("onclick",
+						"escolherCarta2("+ idCarta1 +");");
+
+						//Devolvendo o atributo onclick para a Carta 2 do jeito que estava,com Jquery
+						$("#divCard"+idCarta2).attr("onclick","escolherCarta2("+ idCarta2 +");");
+					}
+					devolverClick();
+				}
+			}	
+	}
+</script>
+</body>
+</html>
