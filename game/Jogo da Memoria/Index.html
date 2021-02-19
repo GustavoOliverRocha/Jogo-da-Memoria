@@ -10,7 +10,7 @@
 	<div class="container-fluid">
 		<div class="row">
 			<h4 id="vez"></h4>
-			<!--<h4 id="test2"></h4>-->
+			<h4 id="test2"></h4>
 			<div class="col-md-12" class="timer">
 				<h2 id="yuyuyu" align="center" ></h2>
 			</div>
@@ -36,7 +36,6 @@
 				Jogador2
 			</div>				
 		</div>
-
 	</div>
 	<script type="text/javascript" src="js/jquery-3.3.1.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -58,9 +57,10 @@
 	var carta2;
 	var idCarta1; //Identificação da primeira carta virada para comparar
 	var idCarta2; //Identificação da segunda carta virada
-	var vez = 1;//1 para o jogado 1 e 2 para o jogador 2
-		
-	// Tempo Limite no modo Solo
+	var p2 = false; //Modo de 2 jogadores desabilitado
+	var vez = 1; //1 para o jogador 1 e 2 para o jogador 2
+
+	//Tempo Limite no modo Solo
 	function tempoLimite(tempo)
 	{
 		var min = tempo;
@@ -183,11 +183,31 @@
 		}
 	}
 
+	function desvirarCartas()
+	{
+		carta1 = null;
+		carta2 = null;
+
+		//Virando as cartas novamente no caso de estarem erradas
+		document.getElementById("imgCard"+idCarta1).classList.remove("flip");
+		$("#imgCard"+idCarta1).attr('src','img/GuessWho.jpg');
+		document.getElementById("imgCard"+idCarta2).classList.remove("flip");
+		$("#imgCard"+idCarta2).attr('src','img/GuessWho.jpg');
+
+		//Devolvendo o atributo onclick para a Carta 1 do jeito que estava,com Javascript puro
+		document.getElementById("divCard"+idCarta1).setAttribute("onclick",
+		"escolherCarta("+ idCarta1 +");");
+
+		//Devolvendo o atributo onclick para a Carta 2 do jeito que estava,com Jquery
+		$("#divCard"+idCarta2).attr("onclick","escolherCarta("+ idCarta2 +");");
+	}
+
 	// Inicio do jogo de dois players
 	function startDoisJogadores()
 	{
 		$(".jogadores").css({"display":"inline-block"});
 		document.getElementById("vez").innerHTML = "Agora é a vez do Jogador "+ vez;
+		$("#jogador1").css({"background-color":"rgba(0,250,154,50%)"});
 		prepararCartas(12);
 		var str = "";
 		$("#conjunto").css({"width":"1px"});
@@ -196,13 +216,13 @@
 		//Exibindo as cartas
 		for(var i2 = 0;i2 < cartasJogadas.length;i2++ )
 		{
-			str += "<div align=\"center\"class=\"cartas\" id=\"divCard"+ i2 +"\" onclick=\"escolherCarta2("+i2+");\"><img src=img/GuessWho.jpg class=\"card\" id=\"imgCard"+ i2 +"\"><\/div>";
+			str += "<div align=\"center\"class=\"cartas\" id=\"divCard"+ i2 +"\" onclick=\"escolherCarta("+i2+");\"><img src=img/GuessWho.jpg class=\"card\" id=\"imgCard"+ i2 +"\"><\/div>";
 		}
 		document.getElementById("conjunto").innerHTML = str;
+		p2 = true;
 	}	
-
 	function escolherCarta(pos)
-	{		
+	{
 			//Caso a pessoa não tenha virado a primeira carta ainda
 			if(carta1 == null)
 			{
@@ -231,146 +251,95 @@
   			},300);
 			document.getElementById("divCard"+pos).removeAttribute("onclick");
 			retirarClick();
-
-			//As cartas ficarão um tempo a mostra para ver se foi um acerto ou um erro
-			//Após esse tempo será executada uma função de verificação
-			setTimeout(verificaAcerto,1100);
-			function verificaAcerto()
+			switch(p2)
 			{
-				//Se as duas cartas estiverem viradas...
-				if(carta1 != null && carta2 != null)
-				{
-					//Caso as cartas sejam iguais
-					if(carta1 == carta2)
-					{
-						if(cartasJogadas.length == 40)
-						{
-							seg+10;
-						}
-						//O par de cartas certas não terão mais função nenhuma.
-						//Removendo o atributo onclick da 1ª carta com Javascript puro
-						document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
-						//Removendo o atributo onclick da 2ª carta com Jquery
-						$("#divCard"+idCarta2).removeAttr("onclick");
-						carta1 = null;
-						carta2 = null;
-					}
-
-					//Caso elas não sejam iguais
-					else
-					{
-						carta1 = null;
-						carta2 = null;
-
-						//Virando as cartas novamente no caso de estarem erradas
-						document.getElementById("imgCard"+idCarta1).classList.remove("flip");
-						$("#imgCard"+idCarta1).attr('src','img/GuessWho.jpg');
-						document.getElementById("imgCard"+idCarta2).classList.remove("flip");
-						$("#imgCard"+idCarta2).attr('src','img/GuessWho.jpg');
-
-						//Devolvendo o atributo onclick para a Carta 1 do jeito que estava,com Javascript puro
-						document.getElementById("divCard"+idCarta1).setAttribute("onclick",
-						"escolherCarta("+ idCarta1 +");");
-
-						//Devolvendo o atributo onclick para a Carta 2 do jeito que estava,com Jquery
-						$("#divCard"+idCarta2).attr("onclick","escolherCarta("+ idCarta2 +");");
-					}
-					devolverClick();
-				}
-			}	
+				case false: setTimeout(verificaAcerto,1100); break
+				case true: setTimeout(verificaAcerto2,1100);break
+				default: alert("ERROR");
+			}			
 	}
-
-
-	//2 Jogadores-----------------------------------------------------------------------------
-	function escolherCarta2(pos)
+	function verificaAcerto()
 	{
-			if(carta1 == null)
+		//Se as duas cartas estiverem viradas...
+		if(carta1 != null && carta2 != null)
+		{
+			//Caso as cartas sejam iguais
+			if(carta1 == carta2)
 			{
-				idCarta1 = pos;
-				carta1 = cartasJogadas[pos];
-			    document.getElementById("imgCard"+pos).src = "img/" + carta1 + ".png";
-			    //Impedindo que a função seja acionada novamente na carta escolhida
-			    document.getElementById("divCard"+pos).removeAttribute("onclick");
-			    return;
+				//O par de cartas certas não terão mais função nenhuma.
+				//Removendo o atributo onclick da 1ª carta com Javascript puro
+				document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
+				//Removendo o atributo onclick da 2ª carta com Jquery
+				$("#divCard"+idCarta2).removeAttr("onclick");
+				carta1 = null;
+				carta2 = null;
 			}
 
-			idCarta2 = pos;
-			carta2 = cartasJogadas[pos];
-			document.getElementById("imgCard"+pos).src = "img/" + carta2 + ".png";
-			document.getElementById("divCard"+pos).removeAttribute("onclick");
-			retirarClick();
-
-			//As cartas ficarão um tempo a mostra para ver se foi um acerto ou um erro
-			//Após esse tempo será executada uma função de verificação
-			setTimeout(verificaAcerto2,800);
-			function verificaAcerto2()
+			//Caso elas não sejam iguais
+			else
 			{
-				//Se as duas cartas estiverem viradas...
-				if(carta1 != null && carta2 != null)
-				{
-					//Caso as cartas sejam iguais
-					if(carta1 == carta2)
-					{
-						/**
-						 * Removendo a função onclick com javascript e Jquery
-						*/
-						document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
-						$("#divCard"+idCarta2).removeAttr("onclick");
+				desvirarCartas()
+			}
+			devolverClick();
+		}
+	}
+	//2 Jogadores----------------------------
+	function verificaAcerto2()
+	{
+		//Se as duas cartas estiverem viradas...
+		if(carta1 != null && carta2 != null)
+		{
+			//Caso as cartas sejam iguais
+			if(carta1 == carta2)
+			{
+				/**
+				* Removendo a função onclick com javascript e Jquery
+				*/
+				document.getElementById("divCard"+idCarta1).removeAttribute("onclick");
+				$("#divCard"+idCarta2).removeAttr("onclick");
 
-						/**
-						 * As cartas certas sairão do tabuleiro
-						 * Elas terão sua opacidade zerada pois se remover as div's delas afetara
-						 * a posição das outras cartas
-						*/
-						$("#divCard"+idCarta1).css({"opacity":"0"});
-						$("#divCard"+idCarta2).css({"opacity":"0"});
+				/**
+				* As cartas certas sairão do tabuleiro
+				* Elas terão sua opacidade zerada pois se remover as div's delas afetara
+				* a posição das outras cartas
+				*/
+				$("#divCard"+idCarta1).css({"opacity":"0"});
+				$("#divCard"+idCarta2).css({"opacity":"0"});
 
-						// Os pares de cartas certas irão para a coluna do jogador que as tirou
-						if(vez == 1)
-						{	
-						 		$("#jogador1").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
-						 		$("#jogador1").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");	
-						}
-						else if (vez == 2)
-						{
-								$("#jogador2").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
-						 		$("#jogador2").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");
-						}
-						carta1 = null;
-						carta2 = null;
-					}
-					else
-					{	
-						if(vez == 1)
-						{
-							document.getElementById("vez").innerHTML = "Agora é a vez do Jogador 2";
-							$("#jogador1").css({"background-color":"white"});
-							$("#jogador2").css({"background-color":"rgba(0,250,154,50%)"});
-							vez = 2;
-						}
-						else if(vez == 2)
-						{
-							$("#jogador1").css({"background-color":"rgba(0,250,154,50%)"});
-							$("#jogador2").css({"background-color":"white"});
-							document.getElementById("vez").innerHTML = "Agora é a vez do Jogador 1";
-							vez = 1;
-						}
-						carta1 = null;
-						carta2 = null;
-						//"Virando" as cartas novamente no caso de estarem erradas
-						$("#imgCard"+idCarta1).attr('src','img/GuessWho.jpg');
-						$("#imgCard"+idCarta2).attr('src','img/GuessWho.jpg');
-
-						//Devolvendo o atributo onclick para a Carta 1 do jeito que estava,com Javascript puro
-						document.getElementById("divCard"+idCarta1).setAttribute("onclick",
-						"escolherCarta2("+ idCarta1 +");");
-
-						//Devolvendo o atributo onclick para a Carta 2 do jeito que estava,com Jquery
-						$("#divCard"+idCarta2).attr("onclick","escolherCarta2("+ idCarta2 +");");
-					}
-					devolverClick();
+				// Os pares de cartas certas irão para a coluna do jogador que as tirou
+				if(vez == 1)
+				{	
+					$("#jogador1").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
+					$("#jogador1").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");	
 				}
-			}	
+				else if (vez == 2)
+				{
+					$("#jogador2").append("<br><img src=\"img/"+carta1+".png\" class=\"smallImg\">");
+					$("#jogador2").append("<img src=\"img/"+carta2+".png\" class=\"smallImg\">");
+				}
+				carta1 = null;
+				carta2 = null;
+			}
+			else
+			{	
+				if(vez == 1)
+				{
+					document.getElementById("vez").innerHTML = "Agora é a vez do Jogador 2";
+					$("#jogador1").css({"background-color":"white"});
+					$("#jogador2").css({"background-color":"rgba(0,250,154,50%)"});
+					vez = 2;
+				}
+				else if(vez == 2)
+				{
+					$("#jogador1").css({"background-color":"rgba(0,250,154,50%)"});
+					$("#jogador2").css({"background-color":"white"});
+					document.getElementById("vez").innerHTML = "Agora é a vez do Jogador 1";
+					vez = 1;
+				}
+				desvirarCartas();
+			}
+			devolverClick();
+		}
 	}
 </script>
 </body>
