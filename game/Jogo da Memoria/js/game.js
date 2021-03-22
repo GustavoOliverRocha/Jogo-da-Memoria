@@ -1,8 +1,3 @@
-var cartas = new Array();/* = ["c1","c2","c3","c4","c5","c6","c7"...]; */ //conjunto total das cartas
-for(var p = 0;p < 45;p++)
-{
-    cartas.push("c"+p);
-}
 var cartasClone1 = new Array(); // Array que irá pegar uma certa quantidade do conjunto
 var cartasClone2 = new Array(); // Nesse array ele será um 'clone' das cartas pegas
 var cartasJogadas = new Array();// Fusão de ambas que formará os pares aparecer no jogo
